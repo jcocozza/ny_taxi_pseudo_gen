@@ -1,34 +1,66 @@
 package api
 
 import (
-    "fmt"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/jcocozza/ny_taxi_pseudo_gen/internal"
 )
 
 const (
-    port = ":8088"
+	port = ":8088"
 )
 
-func requestTaxiHandler(w http.ResponseWriter, r *http.Request) {
-    taxi := internal.CreateNewTaxiRecord()
+func generateTaxiRecord(w http.ResponseWriter, r *http.Request) {
+	taxi := internal.CreateNewTaxiRecord()
 
-    w.Header().Set("Content-Type", "application/json")
-    err := json.NewEncoder(w).Encode(taxi)
-    if err != nil {
-        panic(err)
-    }
+	w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(w).Encode(taxi)
+	if err != nil {
+		panic(err)
+	}
 }
 
+func servePage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(htmlContent))
+}
+
+func handleFormSubmission(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		fromStr := r.FormValue("from")
+		toStr := r.FormValue("to")
+
+		from, _ := strconv.Atoi(fromStr)
+		to, _ := strconv.Atoi(toStr)
+		taxi := internal.CreateTaxiRecordFromLocs(from, to)
+		fmt.Println("taxi requested: ", taxi)
+
+		err := internal.WriteToSnowflake(taxi)
+		if err != nil {
+			panic(err)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(taxi)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
 
 func Serve() {
-    http.HandleFunc("/request_taxi", requestTaxiHandler)
-    fmt.Printf("Server is running on http://localhost%s\n", port)
+	http.HandleFunc("/request_taxi", servePage)
+	http.HandleFunc("/submit", handleFormSubmission)
+	http.HandleFunc("/generate_taxi_record", generateTaxiRecord)
+	fmt.Printf("Server is running on http://localhost%s\n", port)
 
-    err := http.ListenAndServe(port, nil)
-    if err != nil {
-        panic(err)
-    }
+	err := http.ListenAndServe(port, nil)
+	if err != nil {
+		panic(err)
+	}
 }

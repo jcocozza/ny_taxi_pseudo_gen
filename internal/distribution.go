@@ -95,6 +95,7 @@ var (
 		{2, 22934804},
 		{6, 3465},
 	}
+
 	// discrete categories
 	passengerCountCat = []Category[int]{
 		{0, 359863},
@@ -109,6 +110,7 @@ var (
 		{9, 66},
 		{-1, 2204270},
 	}
+
 	rateCodeIdCat = []Category[int]{
 		{1, 26543337},
 		{2, 1044389},
@@ -119,11 +121,13 @@ var (
 		{99, 260847},
 		{-1, 2204270},
 	}
+
 	storeAndFwdFlagCat = []Category[string]{
 		{"N", 28068433},
 		{"Y", 150430},
 		{"null", 2204270},
 	}
+
 	puLocationIdCat = []Category[int]{
 		{1, 3760},
 		{2, 35},
@@ -702,3 +706,4 @@ var (
 		tripType:       {"trip_type", tripTypeCat},
 	}
 )
+

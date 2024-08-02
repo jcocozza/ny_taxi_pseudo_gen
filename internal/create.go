@@ -2,6 +2,8 @@ package internal
 
 import (
 	"time"
+
+	"github.com/jcocozza/ny_taxi_pseudo_gen/internal/snowflake"
 )
 
 type TaxiRecord struct {
@@ -52,4 +54,40 @@ func CreateNewTaxiRecord() TaxiRecord {
 		TaxiType:             Taxi_DiscreteStr[taxiType].WeightedRandomSelection(),
 		TripType:             Taxi_DiscreteInt[tripType].WeightedRandomSelection(),
 	}
+}
+
+func CreateTaxiRecordFromLocs(puloc, doloc int) TaxiRecord {
+	return TaxiRecord{
+		VendorId:             Taxi_DiscreteInt[vendorId].WeightedRandomSelection(),
+		Pickup:               time.Now(),
+		Dropoff:              time.Now().Add(time.Duration(float64(time.Minute) * (Taxi_Continuous[tripDuration].GenNormRand()))),
+		PassengerCount:       Taxi_DiscreteInt[passengerCount].WeightedRandomSelection(),
+		TripDistance:         Taxi_Continuous[tripDistance].GenNormRand(),
+		RateCodeId:           Taxi_DiscreteInt[ratecodeid].WeightedRandomSelection(),
+		StoreAndFwdFlag:      Taxi_DiscreteStr[storeAndFwdFlag].WeightedRandomSelection(),
+		PulocationId:         puloc,
+		DolocationId:         doloc,
+		PaymentType:          Taxi_DiscreteInt[paymentType].WeightedRandomSelection(),
+		FareAmount:           Taxi_Continuous[fareAmount].GenNormRand(),
+		Extra:                Taxi_Continuous[extra].GenNormRand(),
+		MtaTax:               Taxi_Continuous[mtaTax].GenNormRand(),
+		TipAmount:            Taxi_Continuous[tipAmount].GenNormRand(),
+		TollsAmount:          Taxi_Continuous[tollsAmount].GenNormRand(),
+		ImprovementSurcharge: Taxi_Continuous[improvementSurcharge].GenNormRand(),
+		TotalAmount:          Taxi_Continuous[totalAmount].GenNormRand(),
+		CongestionSurcharge:  Taxi_Continuous[congestionSurcharge].GenNormRand(),
+		AirportFee:           Taxi_Continuous[airportFee].GenNormRand(),
+		TaxiType:             Taxi_DiscreteStr[taxiType].WeightedRandomSelection(),
+		TripType:             Taxi_DiscreteInt[tripType].WeightedRandomSelection(),
+	}
+}
+
+func WriteToSnowflake(taxiRecord TaxiRecord) error {
+	db, err := snowflake.SnowflakeConn()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	sql := "INSERT INTO real_time_test (pulocationid, dolocationid, total_amount) VALUES (?, ?, ?)"
+	return snowflake.RunSQL(db, sql, taxiRecord.PulocationId, taxiRecord.DolocationId, taxiRecord.TotalAmount)
 }
