@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"time"
 
 	"github.com/jcocozza/ny_taxi_pseudo_gen/internal/snowflake"
@@ -90,4 +91,22 @@ func WriteToSnowflake(taxiRecord TaxiRecord) error {
 	defer db.Close()
 	sql := "INSERT INTO real_time_test (pulocationid, dolocationid, total_amount) VALUES (?, ?, ?)"
 	return snowflake.RunSQL(db, sql, taxiRecord.PulocationId, taxiRecord.DolocationId, taxiRecord.TotalAmount)
+}
+
+func GetPricingModifier(taxiRecord TaxiRecord) (float64, error) {
+	db, err := snowflake.SnowflakeConn()
+	if err != nil {
+		return -1, err
+	}
+	defer db.Close()
+
+	sql := "SELECT MAX(modifier) FROM pricing_modifier_by_zone WHERE location_id IN (?, ?);"
+	row := db.QueryRowContext(context.TODO(), sql, taxiRecord.PulocationId, taxiRecord.DolocationId)
+
+	var modifier float64
+	err = row.Scan(&modifier)
+	if err != nil {
+		return -1, err
+	}
+	return modifier, nil
 }

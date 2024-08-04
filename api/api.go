@@ -36,9 +36,17 @@ func handleFormSubmission(w http.ResponseWriter, r *http.Request) {
 		from, _ := strconv.Atoi(fromStr)
 		to, _ := strconv.Atoi(toStr)
 		taxi := internal.CreateTaxiRecordFromLocs(from, to)
-		fmt.Println("taxi requested: ", taxi)
+		fmt.Println("taxi price original: ", taxi.TotalAmount)
 
-		err := internal.WriteToSnowflake(taxi)
+		// very simple pricing logic modifier
+		priceModifier, err := internal.GetPricingModifier(taxi)
+		if err != nil {
+			panic(err)
+		}
+		taxi.TotalAmount += priceModifier
+		fmt.Println("taxi with updated pricing:", taxi.TotalAmount)
+
+		err = internal.WriteToSnowflake(taxi)
 		if err != nil {
 			panic(err)
 		}
