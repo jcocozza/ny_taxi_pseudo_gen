@@ -51,7 +51,6 @@ func createConnectionString(cfg SnowConfig) string {
 	//dsn := "%s:%s@%s/%s/%s/%s?role=%s"
 	dsn := "%s:%s@%s/%s/%s?warehouse=%s&role=%s"
 	final := fmt.Sprintf(dsn, cfg.User, url.QueryEscape(cfg.Password), cfg.Account, cfg.Database, cfg.Schema, cfg.Warehouse, cfg.Role)
-	fmt.Println(final)
 	return final
 }
 
@@ -66,28 +65,6 @@ func SnowflakeConn() (*sql.DB, error) {
 		return nil, fmt.Errorf("missing required configuration fields")
 	}
 	dsn := createConnectionString(cfg)
-	/*
-	fmt.Println(cfg)
-	goSnowCfg := &gosnowflake.Config{
-		User:      cfg.User,
-		Account:   cfg.Account,
-		Password:  cfg.Password,
-		Database:  cfg.Database,
-		Schema:    cfg.Schema,
-		Warehouse: cfg.Warehouse,
-		Role:      cfg.Role,
-	}
-	connector := gosnowflake.NewConnector(gosnowflake.SnowflakeDriver{}, *goSnowCfg)
-
-	db := sql.OpenDB(connector)
-	// Test the connection
-	err := db.Ping()
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to Snowflake: %v", err)
-	}
-
-	return db, nil
-	*/
 	return sql.Open("snowflake", dsn)
 }
 

@@ -100,8 +100,19 @@ func GetPricingModifier(taxiRecord TaxiRecord) (float64, error) {
 	}
 	defer db.Close()
 
-	sql := "SELECT MAX(modifier) FROM pricing_modifier_by_zone WHERE location_id IN (?, ?);"
-	row := db.QueryRowContext(context.TODO(), sql, taxiRecord.PulocationId, taxiRecord.DolocationId)
+	//sql := "SELECT MAX(modifier) FROM pricing_modifier_by_zone WHERE location_id IN (?, ?);"
+
+	sql := `WITH cte AS (
+SELECT borough as b
+FROM dim_zone_lookup
+WHERE locationid IN (?,?)
+)
+SELECT MAX(percent_increase)
+FROM borough_hr_pricing
+INNER JOIN cte ON UPPER(borough_hr_pricing.borough) = UPPER(cte.b)
+WHERE borough_hr_pricing.hour = ?`
+
+	row := db.QueryRowContext(context.TODO(), sql, taxiRecord.PulocationId, taxiRecord.DolocationId, taxiRecord.Pickup.Hour())
 
 	var modifier float64
 	err = row.Scan(&modifier)

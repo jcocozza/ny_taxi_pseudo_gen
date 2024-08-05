@@ -46,16 +46,29 @@ func handleFormSubmission(w http.ResponseWriter, r *http.Request) {
 		taxi.TotalAmount += priceModifier
 		fmt.Println("taxi with updated pricing:", taxi.TotalAmount)
 
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(fmt.Sprintf(`
+            <html>
+            <body>
+                <p>Based on your zone, your total price is: %.2f</p>
+                <p>You will be redirected in 5 seconds...</p>
+                <meta http-equiv="refresh" content="5; url=/request_taxi" />
+            </body>
+            </html>
+        `, taxi.TotalAmount)))
+
 		err = internal.WriteToSnowflake(taxi)
 		if err != nil {
 			panic(err)
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(taxi)
-		if err != nil {
-			panic(err)
-		}
+		/*
+			w.Header().Set("Content-Type", "application/json")
+			err = json.NewEncoder(w).Encode(taxi)
+			if err != nil {
+				panic(err)
+			}
+		*/
 	} else {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
