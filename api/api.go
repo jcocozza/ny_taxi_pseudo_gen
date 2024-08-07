@@ -50,12 +50,12 @@ func handleFormSubmission(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf(`
             <html>
             <body>
-                <p>Based on your zone, your total price is: %.2f</p>
-                <p>You will be redirected in 5 seconds...</p>
-                <meta http-equiv="refresh" content="5; url=/request_taxi" />
+				<p>Based on your zone and the current time: %s, your total price is: %.2f</p>
+                <p>You will be redirected in 8 seconds...</p>
+                <meta http-equiv="refresh" content="8; url=/request_taxi" />
             </body>
             </html>
-        `, taxi.TotalAmount)))
+        `, taxi.Pickup.String(), taxi.TotalAmount)))
 
 		err = internal.WriteToSnowflake(taxi)
 		if err != nil {
